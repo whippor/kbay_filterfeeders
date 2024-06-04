@@ -1,0 +1,86 @@
+species,activity,rate_formula,unit,min_max_mean,derivation,source,notes,calculated g rate
+Mytilus edulis,filtration,F = 7.37W^0.72,l_hr,mean,lab_model,Riisgård & Mohlenberg (1979) VIA Riisgård (2001),W = g body dry weight,4.212855772
+Mytilus edulis,filtration,F = 7.45W^0.66,l_hr,mean,lab_model,Mohlenberg & Riisgård (1979) VIA Riisgård (2001),W = g body dry weight,3.763770552
+Mytilus edulis,filtration,F = 0.0012L^2.14,l_hr,mean,lab_model,Kiørboe & Møhlenberg (1981) VIA Riisgård (2001),L = length mm,
+Crassostrea virginica,filtration,F = 6.79W^0.73,l_hr,mean,lab_model,Riisgård (1988) VIA Riisgård (2001),W = g body dry weight,4.048227728
+Mytilus californianus,filtration,F = 7.9W^0.72,l_hr,mean,lab_model,Meyhöfer (1985) VIA Riisgård (2001),W = g body dry weight,4.428855448
+Magallana gigas,clearance,0.02,l_hr_g,mean,lab_model,Dupuy et al. (2000),picoplankton clearance,
+Magallana gigas,clearance,8.1,l_hr_g,mean,lab_model,Dupuy et al. (2000),diatoms clearance,
+Magallana gigas,clearance,6.8,l_hr_g,mean,lab_model,Dupuy et al. (2000),< 5 um flagellates clearance,
+Magallana gigas,clearance,16.7,l_hr_g,mean,lab_model,Dupuy et al. (2000),> 5 um flagellates clearance,
+Magallana gigas,clearance,14.8,l_hr_g,mean,lab_model,Dupuy et al. (2000),dinoflagellates clearance,
+Magallana gigas,clearance,12.7,l_hr_g,mean,lab_model,Dupuy et al. (2000),ciliates clearance,
+Mytilus edulis,clearance,1.82,l_hr_ind,mean,lab_model,Luc et al. (2008),day 0; 9C,
+Mytilus edulis,clearance,1.93,l_hr_ind,mean,lab_model,Luc et al. (2008),day 14; 9C,
+Mytilus edulis,clearance,2,l_hr_ind,mean,lab_model,Luc et al. (2008),day 29; 9C,
+Mytilus edulis,clearance,2.49,l_hr_ind,mean,lab_model,Luc et al. (2008),day 43; 9C,
+Mytilus edulis,clearance,2.9,l_hr_ind,mean,lab_model,Luc et al. (2008),day 63; 9C,
+Mytilus edulis,clearance,1.58,l_hr_ind,mean,lab_model,Luc et al. (2008),day 0; 4C,
+Mytilus edulis,clearance,2.4,l_hr_ind,mean,lab_model,Luc et al. (2008),day 14; 4C,
+Mytilus edulis,clearance,1.77,l_hr_ind,mean,lab_model,Luc et al. (2008),day 29; 4C,
+Mytilus edulis,clearance,2.09,l_hr_ind,mean,lab_model,Luc et al. (2008),day 43; 4C,
+Mytilus edulis,clearance,2.32,l_hr_ind,mean,lab_model,Luc et al. (2008),day 63; 4C,
+Mytilus edulis,clearance,0.61,l_hr_ind,mean,lab_model,Luc et al. (2008),day 0; 0C,
+Mytilus edulis,clearance,0.95,l_hr_ind,mean,lab_model,Luc et al. (2008),day 14; 0C,
+Mytilus edulis,clearance,1.46,l_hr_ind,mean,lab_model,Luc et al. (2008),day 29; 0C,
+Mytilus edulis,clearance,1.11,l_hr_ind,mean,lab_model,Luc et al. (2008),day 43; 0C,
+Mytilus edulis,clearance,0.59,l_hr_ind,mean,lab_model,Luc et al. (2008),day 63; 0C,
+Crassostrea virginica,clearance,1.62,l_hr_ind,mean,lab_model,Luc et al. (2008),day 0: 9C,
+Crassostrea virginica,clearance,0.87,l_hr_ind,mean,lab_model,Luc et al. (2008),day 14; 9C,
+Crassostrea virginica,clearance,1.6,l_hr_ind,mean,lab_model,Luc et al. (2008),day 29; 9C,
+Crassostrea virginica,clearance,0.69,l_hr_ind,mean,lab_model,Luc et al. (2008),day 43; 9C,
+Crassostrea virginica,clearance,0.92,l_hr_ind,mean,lab_model,Luc et al. (2008),day 63; 9C,
+Crassostrea virginica,clearance,0.92,l_hr_ind,mean,lab_model,Luc et al. (2008),day 0; 4C,
+Crassostrea virginica,clearance,2.68,l_hr_ind,mean,lab_model,Luc et al. (2008),day 14; 4C,
+Crassostrea virginica,clearance,0.81,l_hr_ind,mean,lab_model,Luc et al. (2008),day 29; 4C,
+Crassostrea virginica,clearance,0.14,l_hr_ind,mean,lab_model,Luc et al. (2008),day 43; 4C,
+Crassostrea virginica,clearance,0.75,l_hr_ind,mean,lab_model,Luc et al. (2008),day 63; 4C,
+Crassostrea virginica,clearance,1.26,l_hr_ind,mean,lab_model,Luc et al. (2008),day 14; 0C,
+Crassostrea virginica,clearance,1.27,l_hr_ind,mean,lab_model,Luc et al. (2008),day 29; 0C,
+Mytilus edulis,filtration,F = 3.27T + 38.2,ml_min_ind,mean,lab_model,Kittner & Riisgård (2005),acclimated to 18C; T = temp,
+Mytilus edulis,filtration,F = 3.27T + 38.1,ml_min_ind,mean,lab_model,Kittner & Riisgård (2005),acclimated to 11C; T = temp,
+Mytilus trossulus,clearance,56,ml_hr_ind,mean,lab_model,Ackerman & Nishizaki (2004),1 cm shell; 1 cm_s flow,
+Mytilus trossulus,clearance,108,ml_hr_ind,mean,lab_model,Ackerman & Nishizaki (2004),1 cm shell; 18 cm_s flow,
+Mytilus trossulus,clearance,112,ml_hr_ind,mean,lab_model,Ackerman & Nishizaki (2004),2 cm shell; 1 cm_s flow,
+Mytilus trossulus,clearance,213,ml_hr_ind,mean,lab_model,Ackerman & Nishizaki (2004),2 cm shell; 18 cm_s flow,
+Mytilus trossulus,clearance,142,ml_hr_ind,mean,lab_model,Ackerman & Nishizaki (2004),2 cm shell; 6 cm_s flow,
+Mytilus trossulus,clearance,141,ml_hr_ind,mean,lab_model,Ackerman & Nishizaki (2004),2 cm shell; 12 cm_s flow,
+Mytilus edulis,clearance,Rc = 0.0004L^2,l_hr,mean,lab_model,Jacobs et al. (2015),L = length mm,
+Mytilus edulis,clearance,Rc = 0.00036W^0.99,l_hr,mean,lab_model,Jacobs et al. (2015),W = g body dry weight; year 2010,0.0003897081387
+Mytilus edulis,clearance,Rc = 0.0054W^0.62,l_hr,mean,lab_model,Jacobs et al. (2015),W = g body dry weight; year 2011,0.03927210055
+Mytilus edulis,clearance,Rc = 0.0024W^0.68,l_hr,mean,lab_model,Jacobs et al. (2015),W = g body dry weight; year 2012,0.01654030998
+Mytilus edulis,clearance,Rc = 0.0002L^2.19,l_hr,mean,lab_model,Jones et al. ( 1992) VIA Jacobs et al. (2015),L = length mm,
+Mytilus edulis,clearance,Rc = 0.0004L^2.09,l_hr,max,lab_model,Jones et al. ( 1992) VIA Jacobs et al. (2015),L = length mm,
+Mytilus edulis,clearance,Rc = 0.0007L^2.14,l_hr,mean,lab_model,Kiorboe & Mohlenberg (1981) VIA Jacobs et al. (2015),L = length mm,
+Mytilus galloprovinciallis,clearance,Rc = 0.0035L^1.72,l_hr,mean,lab_model,Filgueira et al. (2008) VIA Jacobs et al. (2015),L = length mm,
+Mytilus edulis,clearance,Rc = 0.0014L^2.08,l_hr,mean,lab_model,Riisgard et al. (2014) VIA Jacobs et al. (2015),L = length mm,
+Mytilus edulis,clearance,Rc = 1.84W^0.34,l_hr,mean,lab_model,Bayne & Widdows (1978) VIA Jacobs et al. (2015),W = g body dry weight,1.230376591
+Mytilus edulis,clearance,Rc = 2.65W^0.38,l_hr,mean,lab_model,Widdows (1978) VIA Jacobs et al. (2015),W = g body dry weight,1.448216303
+Mytilus edulis,clearance,Rc = 1.78W^0.70,l_hr,mean,lab_model,Jones et al. ( 1992) VIA Jacobs et al. (2015),W = g body dry weight,1.497248896
+Mytilus edulis,clearance,Rc = 3.16W^0.72,l_hr,max,lab_model,Jones et al. ( 1992) VIA Jacobs et al. (2015),W = g body dry weight,2.289679519
+Mytilus edulis,clearance,Rc = 1.66W^0.57,l_hr,mean,lab_model,Smaal et al. (1997) VIA Jacobs et al. (2015),W = g body dry weight,1.334939581
+Mytilus galloprovinciallis,clearance,Rc = 5.80W^0.60,l_hr,mean,lab_model,Filgueira et al. (2008) VIA Jacobs et al. (2015),W = g body dry weight,2.871156041
+Mytilus edulis,clearance,Rc = 6.90W^0.68,l_hr,mean,lab_model,Riisgard et al. (2014) VIA Jacobs et al. (2015),W = g body dry weight,3.718924672
+Mytilus edulis,clearance,1.6,l_hr,mean,lab_model,Nielsen & Vismann (2014),20 mussels; all velocities,
+Mytilus edulis,clearance,3.2,l_hr,mean,lab_model,Nielsen & Vismann (2014),3 mussels; 0.05-0.2 m_s velocity,
+Mytilus edulis,clearance,1.8,l_hr,mean,lab_model,Nielsen & Vismann (2014),3 mussels: 0.4 m_s velocity,
+Mytilus edulis,clearance,1,l_hr,mean,lab_model,Nielsen & Vismann (2014),3 mussels; 0.41-0.6 m_s velocity,
+Mytilus edulis,pumping,2,l_hr,median,lab_model,Steeves et al. (2022),May,
+Mytilus edulis,pumping,3.2,l_hr,median,lab_model,Steeves et al. (2022),June,
+Mytilus edulis,pumping,3.1,l_hr,median,lab_model,Steeves et al. (2022),April,
+Magallana gigas,filtration,FR = 1.2W^0.73,ml_hr_ind,mean,lab_model,Gerdes (1983),W = mg body dry weight,1.142358216
+Mytilus edulis,clearance,5.3,ml_hr_g,mean,field_model,Prins et al. (1996),Jun 1987; g = AFDW mussel tissue,
+Mytilus edulis,clearance,1.3,ml_hr_g,mean,field_model,Prins et al. (1996),Sep 1987; g = AFDW mussel tissue,
+Mytilus edulis,clearance,2.4,ml_hr_g,mean,field_model,Prins et al. (1996),Jun1988; g = AFDW mussel tissue,
+Mytilus edulis,clearance,2.6,ml_hr_g,mean,field_model,Prins et al. (1996),Jun 1988; g = AFDW mussel tissue,
+Mytilus edulis,clearance,1.3,ml_hr_g,mean,field_model,Prins et al. (1996),Jun 19889; g = AFDW mussel tissue,
+Mytilus edulis,clearance,0.7,ml_hr_g,mean,field_model,Prins et al. (1996),Sep 1988; g = AFDW mussel tissue,
+Mytilus edulis,clearance,3.4,ml_hr_g,mean,field_model,Prins et al. (1996),Apr1989; g = AFDW mussel tissue,
+Mytilus edulis,clearance,2.3,ml_hr_g,mean,field_model,Prins et al. (1996),Apr1989; g = AFDW mussel tissue,
+Mytilus edulis,clearance,3.2,ml_hr_g,mean,lab_model,Prins et al. (1996),Jun 1987; g = AFDW mussel tissue,
+Mytilus edulis,clearance,2.7,ml_hr_g,mean,lab_model,Prins et al. (1996),Jun 1988: g = AFDW,
+Mytilus edulis,clearance,3.7,ml_hr_g,mean,lab_model,Prins et al. (1996),g = AFDW,
+Mytilus edulis,clearance,1.6,ml_hr_g,mean,lab_model,Prins et al. (1996),Sep 1988; g = AFDW mussel tissue,
+Mytilus edulis,clearance,4.3,ml_hr_g,mean,lab_model,Prins et al. (1996),g = AFDW,
+Mytilus edulis,clearance,9.5,l_g_hr,mean,lab_model,Petersen et al. (2004),g = M. edulis tissue; Aiguillon locale,
+Mytilus edulis,clearance,4.9,l_g_hr,mean,lab_model,Petersen et al. (2004),g = M. edulis tissue; Oosterschelde locale,
