@@ -84,3 +84,5 @@ Mytilus edulis,clearance,1.6,ml_hr_g,mean,lab_model,Prins et al. (1996),Sep 1988
 Mytilus edulis,clearance,4.3,ml_hr_g,mean,lab_model,Prins et al. (1996),g = AFDW,
 Mytilus edulis,clearance,9.5,l_g_hr,mean,lab_model,Petersen et al. (2004),g = M. edulis tissue; Aiguillon locale,
 Mytilus edulis,clearance,4.9,l_g_hr,mean,lab_model,Petersen et al. (2004),g = M. edulis tissue; Oosterschelde locale,
+Magallana gigas,clearance,3.96,l_h_ind,mean,field_model,Vismann et al. (2016),calculated from oyster density to m^2 turnover,
+Mytilus edulis,clearance,0.4467532468,l_h_ind,mean,field_model,Vismann et al. (2016),caculated from mussel density to m^2 turnover,
