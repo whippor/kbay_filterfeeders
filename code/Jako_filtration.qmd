@@ -1,0 +1,435 @@
+---
+title: "Jakolof Bay Bivalve Filtration"
+format: html
+embed-resources: TRUE
+editor: visual
+# bibliography: references.bib  
+---
+
+```{r}
+#| echo: false
+#| print: false
+#| warning: false
+
+setwd("~/git/kbay_filterfeeders")
+
+library(tidyverse)
+library(viridis)
+library(terra)
+library(leaflet)
+
+# FUNCTIONS
+rad2deg <- function(rad) {(rad * 180) / (pi)}
+deg2rad <- function(deg) {(deg * pi) / (180)}
+
+# command to read in data to R
+mussel_data <- read_csv("data/mussel_data.csv", 
+                        col_types = cols(polygon_ID = col_character(), 
+                                         quadrat = col_character(), 
+                                         site = col_character())) 
+
+# recode quadrat factor
+mussel_data <- mussel_data %>%
+  mutate(quadrat = case_when(position_percent == "10" ~ "1",
+                             position_percent == "30" ~ "2",
+                             position_percent == "50" ~ "3",
+                             position_percent == "70" ~ "4",
+                             position_percent == "90" ~ "5")) 
+           
+# reorder site factor
+mussel_data <- mussel_data %>%
+  mutate(site = factor(site, levels = c("1", "2", "3", "4", "5",
+                                              "6", "7", "8", "9", "10")))
+
+# clearance equation: Rc = 0.0002L^2.19 from Jones et al. 1992
+mussel_data <- mussel_data %>%
+  mutate(filtration_l_hr = 0.0002 * length_mm^2.19)
+
+# wet weight: ww = 0.000224L^2.71 calculated in the field interns
+mussel_data <- mussel_data %>%
+  mutate(wet_weight_g = 0.000224 * length_mm^2.71)
+
+# import the shoreline spatial data
+tidelands <- terra::vect("data/tidalbands_shore_information_translated/tidalbands_shore_information_translatedPolygon.shp")
+
+# turn the spatial layer into a data.frame (spreadsheet) and summarize its contents
+tidelands_df <- data.frame(values(tidelands))
+
+# import a bounding shape for Jakolof Bay
+jako <- terra::vect("data/Jakolof_Bay_poly.kml")
+
+# extract the tidelands crs
+newcrs <- crs(tidelands)
+
+# reproject the Jakolof layer in the new crs
+jako_new <- terra:: project(jako, newcrs)
+
+# crop the tidelands layer to just Jakolof
+tidelands_jako <- terra::crop(tidelands, jako_new)
+
+# standardize substrate names
+jako_df <- data.frame(tidelands_jako)
+jako_df <- jako_df %>%
+  mutate(temp = str_extract(high_slope, "[0-9]-[0-9]*")) %>%
+  mutate(temp = replace_na(temp, "60")) %>%
+  separate_wider_delim(temp, "-", names = c("low", "high"), too_few = "align_start") %>%
+  mutate(high = replace_na(high, "60")) %>%
+  mutate(across(c(high, low), as.numeric)) %>%
+  rowwise() %>%
+  mutate(high_slope_mean = mean(c(low, high))) %>% # high mean slope
+  mutate(temp1 = str_extract(highmediu0, "[0-9]-[0-9]*")) %>%
+  mutate(temp1 = replace_na(temp1, "60")) %>%
+  separate_wider_delim(temp1, "-", names = c("low1", "high1"), too_few = "align_start") %>%
+  mutate(high1 = replace_na(high1, "60")) %>%
+  mutate(across(c(high1, low1), as.numeric)) %>%
+  rowwise() %>%
+  mutate(highmed_slope_mean = mean(c(low1, high1))) %>% # high-med mean slope
+  mutate(temp2 = str_extract(lowmedium0, "[0-9]-[0-9]*")) %>%
+  mutate(temp2 = replace_na(temp2, "60")) %>%
+  separate_wider_delim(temp2, "-", names = c("low2", "high2"), too_few = "align_start") %>%
+  mutate(high2 = replace_na(high2, "60")) %>%
+  mutate(across(c(high2, low2), as.numeric)) %>%
+  rowwise() %>%
+  mutate(lowmed_slope_mean = mean(c(low2, high2))) %>% # low-med mean slope
+  mutate(temp3 = str_extract(low_slope, "[0-9]-[0-9]*")) %>%
+  mutate(temp3 = replace_na(temp3, "60")) %>%
+  separate_wider_delim(temp3, "-", names = c("low3", "high3"), too_few = "align_start") %>%
+  mutate(high3 = replace_na(high3, "60")) %>%
+  mutate(across(c(high3, low3), as.numeric)) %>%
+  rowwise() %>%
+  mutate(low_slope_mean = mean(c(low3, high3))) %>% # low mean slope
+  mutate(average_slope = (high_slope_mean +
+                            highmed_slope_mean +
+                            lowmed_slope_mean +
+                            low_slope_mean)/4) %>% # grand mean slope
+  mutate(multiplier = 1/cos(deg2rad(average_slope)))
+jako_df <- jako_df %>%
+  mutate(substrate = case_when(subclass == "Rubble" ~ "boulder",
+                               subclass == "Cobble/Gravel" ~ "pebble_granule",
+                               subclass == "Mud/Organic" ~ "mud_organic",
+                               subclass == "Bedrock" ~ "bedrock",
+                               .default = "unknown"))
+
+# add multiplier as value to layer  
+tidelands_jako[["recoded_substrate"]] <- jako_df$substrate
+
+```
+
+## Summary
+
+HERE.
+
+## Methods
+
+### Mussel clearance rates
+
+Mussel clearance rates were calculated using the equation (*Mytilus edulis*) from [Jones1992]:
+
+(1.1)
+$$
+R_c = 0.0002L^{2.19}
+$$
+Where *R~c~* was the clearance rate in liters per hour and *L* was the shell length in millimeters. Clearance for all mussels was assumed to be 100%, which is the most conservative value for this analysis.   
+
+
+### Spatial analysis
+
+#### Habitat and filtration
+
+Intertidal habitat characterizations were derived from polygons created as part of the Kachemak Bay National Estuarine Research Reserve intertidal habitat mapping project \[pegau2003\]. Polygons within Jakolof Bay were extracted (n = 228) with associated substrate categories classified as 'bedrock', 'cobble/gravel', 'mud/organic', and 'rubble'. The rubble and cobble/gravel categories were combined into a single category called 'pebble/granule' and rubble was recoded as 'boulder'. For this analysis, only the boulder and pebble/granule substrate types were targeted. Polygons were bounded by the mean low tide line on the lower edge, and the highest high tide line on the upper edge. Mean two-dimensional polygon area ranged from 48.9 m^2^ to 82,830.6 m^2^ (mean = 2,684.9, SD = 8,821.1). Mean slope was calculated for each polygon from four recorded slope measurements across the intertidal zone (high slope, high-medium slope, low-medium slope, low slope). To adjust for the effect of slope on the total area of each two-dimensional polygon as viewed from above, the following equation was used to estimate area: 
+
+(1.2)
+$$
+A_s = A_0/cos(\alpha) 
+$$
+Where A~s~ was the final adjusted area, A~0~ was the 2-dimensional area of each polygon, and \alpha was the mean slope of the polygon. For polygons with unknown or missing slopes, the raw two-dimensional area was used (n = 2).  
+
+To estimate the likely total area of mussel distribution within each polygon, the total mean vertical distance between the lower and upper edges of the mussel beds within each substrate type were calculated as a proportion of the total vertical distance from the lower to upper edge of all polygons. The adjusted area (A~s~) for each polygon was then multiplied by the the calculated proportion of its respective habitat type that contained mussels. This remaining area was divided into five equal parts representing five quadrats taken at equal intervals from the bottom edge of each mussel bed to the top edge. Horizontal variation in mussel density and size was assumed to be minimal within each polygon, and the mean measured abundance of each quadrat across both substrate types was multiplied by this 1/5 area value divided by the quadrat size (0.5 m x 0.5 m) to interpolate total mussel abundance per polygon. Mussel size for all individuals within each area was taken as the mean length (mm) of mussels found at that quadrat number across all sites within a substrate type.  
+
+Total clearance rates for each polygon were calculated using equation 1.1 with calculated mean mussel lengths multiplied by estimated mussel abundance. Mud/organic substrate filtration rates and unknown substrate filtration rates were calculated according to pebble/granule and boulder rates respectively. Unknown substrates were treated as pebble/granule.
+
+#### Oyster filtration
+
+Oyster filtration was estimated using the following formula from 
+
+#### Tidal exchange
+
+The tidal exchange of Jakolof Bay was calculated for a neap (3 m) exchange and derived by determining the volume of the bay at two different tidal heights from a 50 m x 50 m bathymetry raster product. The raster was generated 
+
+
+## Results
+
+### Mussel size and distribution
+```{r}
+#| echo: false
+#| fig-cap: "Figure 1: Mean abundance of mussels in each quadrat across two substrate types. Quadrats were arranged from the lower edge of each mussel bed (1) to the upper edge of each bed (5). Colors represent the mean mussel shell length across all quadrats within each substrate type."
+
+
+# Mean abundance and size per substrate and quadrat
+mussel_data %>%
+  group_by(substrate, quadrat) %>%
+  mutate(mean_size = mean(length_mm)) %>%
+  select(site, quadrat, substrate, mean_size) %>%
+  ungroup() %>%
+  group_by(site, quadrat) %>%
+  mutate(abundance = n()) %>%
+  distinct() %>%
+  ggplot(aes(x = quadrat,
+             y = abundance,
+             fill = mean_size)) +
+  stat_boxplot() +
+  theme_bw() +
+  scale_fill_viridis("Mean Size (mm)",
+                     option = "C") +
+  facet_wrap(.~ substrate, 
+             labeller = labeller(substrate = c("boulder" = "Boulder",
+                                               "pebble_granule" = "Pebble/Granule"))) +
+  labs(x = "Quadrat", y = "Mean Abundance")
+
+```
+
+
+
+### Mussel clearance rates
+```{r}
+#| echo: false
+#| fig-cap: "Estimated clearance rates for all mussels within each substrate type from the low edge (quadrat 1) to the high edge (quadrat 5) for all measured sites."
+
+
+ggplot(mussel_data, aes(x = quadrat,
+                        y = filtration_l_hr,
+                        fill = substrate)) +
+  geom_boxplot() +
+  theme_bw() +
+  scale_fill_viridis("Substrate", 
+                     labels = c("Boulder",
+                                "Pebble/Granule"),
+                     discrete = TRUE,
+                     option = "D",
+                     begin = 0.3, 
+                     end = 0.7) +
+  labs(x = "Quadrat", y = "Filtration Rate (L/hr)")
+```
+
+### Spatial analyses
+```{r}
+#| echo: false
+#| fig-cap: "Substrate polygons in Jakolof Bay."
+
+
+tidelands_map <- plet(tidelands_jako, "recoded_substrate",
+                      fill = 0.5,
+                      col = c(viridis(n = 5 ,
+                                    begin = 0,
+                                    end = 0.9,
+                                    option = "A")))
+tidelands_map %>%
+  addScaleBar() 
+
+```
+
+```{r}
+#| echo: false
+#| print: false
+#| warning: false
+
+
+# extract raw polygon areas
+jako_polygon_area <- expanse(tidelands_jako)  
+
+# create data frame of corrected polygon areas
+jako_areas <- data.frame(jako_df$key, jako_df$substrate, jako_polygon_area, jako_df$multiplier) %>%
+  mutate(corrected_area = jako_polygon_area * jako_df.multiplier) %>%
+  mutate(substrate = jako_df.substrate)
+
+# Determine mean tidal height for quads within substrates, mean mussel size, 
+# mussel count, and filtration rates
+mussel_height_summary <- mussel_data %>%
+  group_by(substrate, position_percent) %>%
+  summarise(across(c(tidal_height_ft,
+                     length_mm,
+                     filtration_l_hr), mean)) 
+mussel_height_mudorg <- mussel_height_summary %>%
+  filter(substrate == "pebble_granule") %>%
+  mutate(substrate = "mud_organic")
+mussel_height_bedrock <- mussel_height_summary %>%
+  filter(substrate == "boulder") %>%
+  mutate(substrate = "bedrock")
+mussel_height_na <- mussel_height_summary %>%
+  filter(substrate == "pebble_granule") %>%
+  mutate(substrate = "unknown")
+all_heights <- mussel_height_summary %>%
+  bind_rows(mussel_height_mudorg,
+            mussel_height_bedrock,
+            mussel_height_na)
+
+mussel_counts <- mussel_data %>%
+  group_by(site, substrate, position_percent) %>%
+  count() %>%
+  ungroup() %>%
+  group_by(substrate, position_percent) %>%
+  mutate(mean_count = mean(n)) %>%
+  ungroup() %>%
+  select(substrate, position_percent, mean_count) %>%
+  distinct()
+mussel_counts_mudorg <- mussel_counts %>%
+  filter(substrate == "pebble_granule") %>%
+  mutate(substrate = "mud_organic")
+mussel_counts_bedrock <- mussel_counts %>%
+  filter(substrate == "boulder") %>%
+  mutate(substrate = "bedrock")
+mussel_counts_na <- mussel_counts %>%
+  filter(substrate == "pebble_granule") %>%
+  mutate(substrate = "unknown")
+all_counts <- mussel_counts %>%
+  bind_rows(mussel_counts_mudorg,
+            mussel_counts_bedrock,
+            mussel_counts_na)
+
+all_heights <- all_heights %>%
+  left_join(all_counts, by = c("substrate",
+                                  "position_percent")) %>%
+  mutate(mean_filtration = filtration_l_hr * mean_count) %>%
+  mutate(tidal_height_m = tidal_height_ft/3.281)
+
+# CONSTANTS TO APPLY AFTER SLOPE CORRECTION:
+BOULDER_cor <- 0.492425
+PEBBLE_GRANULE_cor <- 0.4505921
+
+# mean filtration by substrate type
+jako_mussel_area <- jako_areas %>%
+  mutate(corrected_mussel_area = case_when(substrate == "pebble_granule" ~ corrected_area * PEBBLE_GRANULE_cor,
+                                           substrate == "boulder" ~ corrected_area * BOULDER_cor,
+                                           substrate == "mud_organic" ~ corrected_area * PEBBLE_GRANULE_cor,
+                                           substrate == "bedrock" ~ corrected_area * BOULDER_cor,
+                                           .default = corrected_area)) %>%
+  mutate(substrate = replace_na(substrate, "unknown")) 
+
+# divide area of each mussel area into 5 equal areas and multiply by each mean 
+# quadrat filtration rate (does not account for unsurveyed habitat types)
+filtration_estimate <- jako_mussel_area %>%
+  expand_grid(position_percent = c(10, 30, 50, 70, 90)) %>% # add position percent 
+  mutate(band_area = corrected_mussel_area/5) %>% # add 1/5 area of each polygon
+  left_join(all_heights, by = c("substrate", "position_percent")) %>% # add filtration rates
+  mutate(quadrat_mulitplier = band_area/0.5) %>% # calculate how many 'quadrats' in each area
+  mutate(filtration_per_area = filtration_l_hr * quadrat_mulitplier) %>% # multiply number of quadrats times filtration rate
+  mutate(count_estimate = mean_count * quadrat_mulitplier)
+
+```
+
+Table 1: Estimated number of mussels across all habitat types
+```{r}
+#| echo: false
+#| print: false
+#| warning: false
+
+filtration_estimate %>%
+  group_by(substrate) %>%
+  summarise(total_mussels = sum(count_estimate))
+
+```
+
+Total estimated number of mussels in the Jakolof Bay:
+```{r}
+
+sum(filtration_estimate$count_estimate)
+
+```
+
+Total estimated wet weight of mussels in the bay (kg):
+```{r}
+#| echo: false
+
+weight_df <- mussel_data %>%
+  select(quadrat, substrate, wet_weight_g) %>%
+  group_by(quadrat, substrate) %>%
+  mutate(sum_wt = sum(wet_weight_g)) %>%
+  mutate(mean_wt = mean(sum_wt)) %>%
+  ungroup() %>%
+  select(quadrat, substrate, mean_wt) %>%
+  distinct()
+mussel_weight_mudorg <- weight_df %>%
+  filter(substrate == "pebble_granule") %>%
+  mutate(substrate = "mud_organic")
+mussel_weight_bedrock <- weight_df %>%
+  filter(substrate == "boulder") %>%
+  mutate(substrate = "bedrock")
+mussel_weight_na <- weight_df %>%
+  filter(substrate == "pebble_granule") %>%
+  mutate(substrate = "unknown")
+all_weight <- weight_df %>%
+  bind_rows(mussel_weight_mudorg,
+            mussel_weight_bedrock,
+            mussel_weight_na)
+
+# divide area of each mussel area into 5 equal areas and multiply by each mean 
+weight_estimate <- jako_mussel_area %>%
+  expand_grid(quadrat = c("1", "2", "3", "4", "5")) %>% # add position percent 
+  mutate(band_area = corrected_mussel_area/5) %>% # add 1/5 area of each polygon
+  left_join(all_weight, by = c("substrate", "quadrat")) %>% # add filtration rates
+  mutate(quadrat_mulitplier = band_area/0.5) %>% # calculate how many 'quadrats' in each area
+  mutate(weight_per_area = mean_wt * quadrat_mulitplier) 
+
+sum(weight_estimate$mean_wt)/1000
+
+```
+
+Table 2: Total liters filtered per hour per substrate type.
+```{r}
+#| echo: false
+
+filtration_estimate %>%
+  group_by(substrate) %>%
+  summarise(total_filtration = sum(filtration_per_area))
+  
+```
+
+Total estimated liters filtered per hour:
+```{r}
+#| echo: false
+
+sum(filtration_estimate$filtration_per_area)
+  
+```
+
+```{r}
+#| echo: false
+#| warning: false
+#| fig-cap: "Estimated total log10 filtration rate for each each of the five mussel zones (defined by quadrat positions) for each polygon (n = 1140)."
+
+
+# plot mean filtration by position
+filtration_estimate %>%
+  ggplot(aes(x = tidal_height_m,
+             y = log10(filtration_per_area),
+             color = substrate)) +
+  geom_point(position = position_jitterdodge()) +
+  theme_bw() +
+  scale_color_viridis("Substrate",
+                      labels = c("Bedrock",
+                                 "Boulder",
+                                 "Mud/Organic",
+                                 "Pebble/Granule",
+                                 "Unknown"),
+                     discrete = TRUE,
+                     option = "A",
+                     begin = 0, 
+                     end = 0.9) +
+  labs(x = "Tidal Height (m)", y = "Log10 Filtration Rate (L/hr)") 
+
+```
+
+
+# add total estimated mussel abundance
+# total mussel estimated abundance per substrate
+# sum of filtration rate for each substrate type
+# find subclass -> did I add it?
+# calculate mussel mass for the bay
+# avg depth, length, width Jakolof
+# add total area compared to projection table
+# share equation lit doc
+# set oysters to 1.5 million or the email value - filtration only by AFDW :(
+# be sure to add NOAA tide info 
+
+
+

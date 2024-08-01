@@ -3,7 +3,7 @@
 # Mussel Data                                                                    ##
 # Data source: Kasitsna Bay Lab - NCCOS - NOAA                                   ##
 # R code prepared by Ross Whippo                                                 ##
-# Last updated 2024-07-22                                                        ##
+# Last updated 2024-07-31                                                        ##
 #                                                                                ##
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -33,6 +33,7 @@
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 # 2024/07/22 Script copied from R Introduction files
+# 2024/07/31 Final mussel field data collected
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # LOAD PACKAGES & PREPARE WORKSPACE                                            ####
@@ -91,12 +92,18 @@ ggplot(mussel_data, aes(x = quadrat,
   scale_fill_viridis(discrete = TRUE,
                      option = "C") 
 
-# reorder quadrat factor
+# recode quadrat factor
 mussel_data <- mussel_data %>%
-  mutate(quadrat = factor(quadrat, levels = c("1", "2", "3", "4", "5",
-                                              "6", "7", "8", "9", "10",
-                                              "11", "12", "13", "14", "15",
-                                              "16", "17", "18", "19", "20")))
+  mutate(quadrat = case_when(position_percent == "10" ~ "1",
+                             position_percent == "30" ~ "2",
+                             position_percent == "50" ~ "3",
+                             position_percent == "70" ~ "4",
+                             position_percent == "90" ~ "5")) 
+           
+# reorder site factor
+mussel_data <- mussel_data %>%
+  mutate(site = factor(site, levels = c("1", "2", "3", "4", "5",
+                                              "6", "7", "8", "9", "10")))
 
 # site and quadrat with proper ordering
 ggplot(mussel_data, aes(x = quadrat, 
@@ -107,13 +114,46 @@ ggplot(mussel_data, aes(x = quadrat,
   scale_fill_viridis(discrete = TRUE,
                      option = "C")
 
+# site and quadrat with proper ordering
+ggplot(mussel_data, aes(x = site, 
+                        y = length_mm,
+                        fill = quadrat)) +
+  geom_boxplot() +
+  theme_bw() +
+  scale_fill_viridis(discrete = TRUE,
+                     option = "C")
+
 # total number of mussels per quadrat
 ggplot(mussel_data, aes(x = quadrat,
-                        fill = site)) +
+                        fill = substrate)) +
   stat_count() +
   theme_bw() +
   scale_fill_viridis(discrete = TRUE,
-                     option = "C") 
+                     option = "C") +
+  scale_color_viridis(discrete = TRUE)
+
+# site and quadrat with proper ordering
+mussel_data %>%
+  group_by(substrate, quadrat) %>%
+  mutate(mean_size = mean(length_mm)) %>%
+  select(site, quadrat, substrate, mean_size) %>%
+  ungroup() %>%
+  group_by(site, quadrat) %>%
+  mutate(abundance = n()) %>%
+  distinct() %>%
+  ggplot(aes(x = quadrat,
+             y = abundance,
+             fill = mean_size)) +
+  stat_boxplot() +
+  theme_bw() +
+  scale_fill_viridis("Mean Size (mm)",
+                     option = "C") +
+  facet_wrap(.~ substrate, 
+             labeller = labeller(substrate = c("boulder" = "Boulder",
+                                               "pebble_granule" = "Pebble/Granule"))) +
+  labs(x = "Quadrat", y = "Mean Abundance")
+
+
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # DATA MANIPULATION & VISUALIZATION                                            ####
@@ -194,6 +234,11 @@ plot(tidelands_jako, "subclass", col = viridis(nrow(tidelands_jako),
                                                end = 1,
                                                option = "turbo"))
 
+tidelands_map <- plet(tidelands_jako, "subclass",tiles = "Stadia.AlidadeSmooth",
+     lwd = NULL, alpha = 0.5)
+tidelands_map %>%
+  leaflet::addScaleBar() 
+
 # add centroids of polygons
 plot(centroids(tidelands_jako, 
                inside = TRUE), add = TRUE)
@@ -267,7 +312,7 @@ jako_df <- jako_df %>%
 
 # standardize substrate names
 jako_df <- jako_df %>%
-  mutate(substrate = case_when(subclass == "Rubble" ~ "pebble_granule",
+  mutate(substrate = case_when(subclass == "Rubble" ~ "boulder",
                                subclass == "Cobble/Gravel" ~ "pebble_granule",
                                subclass == "Mud/Organic" ~ "mud_organic",
                                subclass == "Bedrock" ~ "bedrock",
@@ -312,23 +357,25 @@ mussel_band_elevation <- mussel_data %>%
   filter(position_percent %in% c(10, 90)) %>%
   group_by(substrate, position_percent) %>%
   summarise(mean(tidal_height_m))
-# boulder  3.9810733 - 0.6031698 = 3.377903
-# pebble_granule 3.9905430 - 1.3842470 =  2.606296
+# boulder  4.240544 - 1.022054 = 3.21849
+# pebble_granule 4.377098 - 1.432028 =  2.94507
 # height location of polygons: # highest tide: 7.05 m mean low: 0.514 m
 # range: 7.05 - 0.514 = 6.536
 # proportions:
-# boulder = 3.377903/6.536 = 0.516815
-# pebble_granule = 2.606296/6.536 = 0.3987601
+# boulder = 3.21849/6.536 = 0.492425
+# pebble_granule = 2.94507/6.536 = 0.4505921
+
 
 # CONSTANTS TO APPLY AFTER SLOPE CORRECTION:
-BOULDER_cor <- 0.516815
-PEBBLE_GRANULE_cor <- 0.3987601
+BOULDER_cor <- 0.492425
+PEBBLE_GRANULE_cor <- 0.4505921
 
 # apply corrections to every polygon based on substrate type
 jako_mussel_area <- jako_areas %>%
   mutate(corrected_mussel_area = case_when(substrate == "pebble_granule" ~ corrected_area * PEBBLE_GRANULE_cor,
                                            substrate == "boulder" ~ corrected_area * BOULDER_cor,
-                                           .default = corrected_area))
+                                           .default = corrected_area)) %>%
+  replace_na(substrate, "unknown")
   
 
 # write data as a csv
@@ -384,7 +431,7 @@ filtration_estimate <- jako_mussel_area %>%
   mutate(filtration_per_area = filtration_l_hr * quadrat_mulitplier) # multiply number of quadrats times filtration rate
 
 sum(filtration_estimate$filtration_per_area, na.rm = TRUE)
-# 117309.9 l/hr
+# 140703.9 l/hr
 
 #++++++++++++++++++++++++++++++++++++++++++
 # CALCULATE TIDAL EXCHANGE OF JAKOLOF BAY #
@@ -411,7 +458,7 @@ bathy_df <- data.frame(bathy_crop) %>%
   
 # convert l/hr to cubic meters per hour
   sum(filtration_estimate$filtration_per_area, na.rm = TRUE)/1000
-# 117.3099 cubic meters per hour
+# 140.7039 cubic meters per hour
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # CREATE EXTREME CASE: MAX MUSSELS SIZE, DENSITY, AREA #
@@ -424,7 +471,7 @@ sum(jako_areas$corrected_area)/0.5 * # total area of all corrected Jakolof inter
         count() %>% 
         ungroup() %>%
         select(n))
-# 553484 cubic meters per hour
+# 3060542 cubic meters per hour
 # tidal exchange rate per hour at 3 meter exchange
 (sum(bathy_df$volume_3) - sum(bathy_df$volume_0)) / 6
 #  1118461 cubic meters per hour
@@ -433,6 +480,8 @@ sum(jako_areas$corrected_area)/0.5 * # total area of all corrected Jakolof inter
 #<<<<<<<<<<<<<<<<<<<<<<<<<<END OF SCRIPT>>>>>>>>>>>>>>>>>>>>>>>>#
 
 # SCRATCH PAD ####
+
+# test of git connection
 
 library(terra)
 library(tidyverse)
@@ -570,3 +619,42 @@ bath_mask <- mask(bathy_roi, jako_new)
 plot(bath_mask)
 tidal_only <- bath_mask < 7
 plot(tidal_only)
+
+
+
+
+# add total estimated mussel abundance
+# total mussel estimated abundance per substrate
+#  sum of filtration rate for each substrate type
+ find subclass -> did I add it?
+ calculate mussel mass for the bay
+ avg depth, length, width Jakolof
+ add total area compared to projection table
+ share equation lit doc
+ set oysters to 1.5 million or the email value - filtration only by AFDW :(
+ be sure to add NOAA tide info 
+
+
+
+
+
+
+
+
+
+
+Table 1: Various estimates of mussels. 
+| Substrate | Est. Mussel Abund. | Right | Center |
+  |:---------:|:------------------:|:-----:|:------:|
+  | 12        | 12                 |    12 |   12   |
+  | 123       | 123                |   123 |  123   |
+  | 1         | 1                  |     1 |   1    |
+  
+  : Demonstration of pipe table syntax
+
+
+
+
+
+
+
