@@ -627,13 +627,13 @@ plot(tidal_only)
 # total mussel estimated abundance per substrate
 #  sum of filtration rate for each substrate type
  find subclass -> did I add it?
- calculate mussel mass for the bay
- avg depth, length, width Jakolof
- add total area compared to projection table
+# calculate mussel mass for the bay
+# avg depth, length, width Jakolof
+# add total area compared to projection table
  share equation lit doc
  set oysters to 1.5 million or the email value - filtration only by AFDW :(
- be sure to add NOAA tide info 
-
+# be sure to add NOAA tide info 
+bibliography
 
 
 
