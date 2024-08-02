@@ -158,18 +158,7 @@ Total clearance rates for each polygon were calculated using equation 1.1 with c
 
 #### Oyster filtration
 
-Oyster filtration rates were estimated using the following formula from Ehrich & Harris \[Ehrich2015\]:
-
-(1.3) 
-$$
-F = 0.17W^{0.75} 
-$$ 
-Where *F* is filtration rate in cubic meters per oyster per day, and *W* is body dry weight in g. Size at age of oysters in dry weight was interpolated from de Melo et al. \[deMelo2019\] which estimated mean dry weight of two-year-old oysters in Washington State as 4.8 g for *Magallana gigas*. Harvest weight was assumed to be reached at 4 years, and total estimates of oyster populations were equally grouped into age categories 1:4. Weights for each age class were assumed to be linear and were fit with the equation:
-
-(1.4) $$
-W_D = 2.4A
-$$ 
-Where *W~D~* is dry weight in grams and *A* is oyster age in years. Two population values were used to represent the oyster population size in Kachemak Bay. The first was based on interviews with oyster farmers in the area and produced a rough estimate of 1.5 million oysters within the bay. The second estimate is 975,745 oysters, based on a 2023 inventory reported to Alaska Fish and Game. The hourly filtration rate was calculated by dividing the daily rate by 24.
+Oyster filtration rates were based on maximum filtration rates reported for *Crassostrea virginica* held at 4 C in Comeau et al. 2008. Two population values were used to represent the oyster population size in Kachemak Bay. The first was based on interviews with oyster farmers in the area and produced a rough estimate of 1.5 million oysters within the bay. The second estimate is 975,745 oysters, based on a 2023 inventory reported to Alaska Fish and Game. The hourly filtration rate was calculated by dividing the daily rate by 24.
 
 ## Results
 
@@ -202,6 +191,51 @@ mussel_data %>%
   labs(x = "Quadrat", y = "Mean Abundance")
 
 ```
+Mussel Weight
+```{r}
+#| echo: false
+#| fig-cap: "Figure X: Distribution of weight of mussels in grams across all quadrats within each substrate type."
+
+
+# Mean abundance and weight per substrate and quadrat
+mussel_data %>%
+  ggplot(aes(x = wet_weight_g)) +
+  geom_histogram() +
+  theme_bw() +
+  facet_wrap(.~ substrate, 
+             labeller = labeller(substrate = c("boulder" = "Boulder",
+                                               "pebble_granule" = "Pebble/Granule"))) +
+  labs(x = "Wet Weight (g)", y = "Mussel Count")
+
+```
+
+```{r}
+#| echo: false
+#| fig-cap: "Figure X: Mean weight of mussels in each quadrat across two substrate types. Quadrats were arranged from the lower edge of each mussel bed (1) to the upper edge of each bed (5). Colors represent the mean mussel weight in grams across all quadrats within each substrate type."
+
+
+# Mean abundance and weight per substrate and quadrat
+mussel_data %>%
+  group_by(substrate, quadrat) %>%
+  mutate(mean_weight = mean(wet_weight_g)) %>%
+  select(site, quadrat, substrate, mean_weight) %>%
+  ungroup() %>%
+  group_by(site, quadrat) %>%
+  mutate(abundance = n()) %>%
+  distinct() %>%
+  ggplot(aes(x = quadrat,
+             y = abundance,
+             fill = mean_weight)) +
+  stat_boxplot() +
+  theme_bw() +
+  scale_fill_viridis("Mean Weight (g)",
+                     option = "C") +
+  facet_wrap(.~ substrate, 
+             labeller = labeller(substrate = c("boulder" = "Boulder",
+                                               "pebble_granule" = "Pebble/Granule"))) +
+  labs(x = "Quadrat", y = "Mean Abundance")
+
+```
 
 ### Mussel clearance rates
 
@@ -223,6 +257,7 @@ ggplot(mussel_data, aes(x = quadrat,
                      begin = 0.3, 
                      end = 0.7) +
   labs(x = "Quadrat", y = "Filtration Rate (L/hr)")
+
 ```
 
 ### Spatial analyses
@@ -268,7 +303,7 @@ Mean depth of Jakolof Bay in meters:
 ```{r}
 #| echo: false
 
-data.frame(bathy_crop) %>%
+test <- data.frame(bathy_crop) %>%
   filter(KBL.bathymetry_GWA.area_50m_EPSG3338 <= 0) %>%
   summarise(mean(KBL.bathymetry_GWA.area_50m_EPSG3338))
 
@@ -371,8 +406,8 @@ filtration_estimate <- jako_mussel_area %>%
   expand_grid(position_percent = c(10, 30, 50, 70, 90)) %>% # add position percent 
   mutate(band_area = corrected_mussel_area/5) %>% # add 1/5 area of each polygon
   left_join(all_heights, by = c("substrate", "position_percent")) %>% # add filtration rates
-  mutate(quadrat_mulitplier = band_area/0.5) %>% # calculate how many 'quadrats' in each area
-  mutate(filtration_per_area = filtration_l_hr * quadrat_mulitplier) %>% # multiply number of quadrats times filtration rate
+  mutate(quadrat_mulitplier = band_area/0.25) %>% # calculate how many 'quadrats' in each area
+  mutate(filtration_per_area = mean_filtration * quadrat_mulitplier) %>% # multiply number of quadrats times filtration rate
   mutate(count_estimate = mean_count * quadrat_mulitplier)
 
 ```
@@ -405,11 +440,14 @@ Total estimated wet weight of mussels in the bay (kg):
 #| echo: false
 
 weight_df <- mussel_data %>%
-  select(quadrat, substrate, wet_weight_g) %>%
-  group_by(quadrat, substrate) %>%
+  select(site, quadrat, substrate, wet_weight_g) %>%
+  group_by(site, quadrat, substrate) %>%
   mutate(sum_wt = sum(wet_weight_g)) %>%
-  mutate(mean_wt = mean(sum_wt)) %>%
   ungroup() %>%
+  select(quadrat, substrate, sum_wt) %>%
+  distinct() %>%
+  group_by(quadrat, substrate) %>%
+  mutate(mean_wt = mean(sum_wt)) %>%
   select(quadrat, substrate, mean_wt) %>%
   distinct()
 mussel_weight_mudorg <- weight_df %>%
@@ -431,10 +469,10 @@ weight_estimate <- jako_mussel_area %>%
   expand_grid(quadrat = c("1", "2", "3", "4", "5")) %>% # add position percent 
   mutate(band_area = corrected_mussel_area/5) %>% # add 1/5 area of each polygon
   left_join(all_weight, by = c("substrate", "quadrat")) %>% # add filtration rates
-  mutate(quadrat_mulitplier = band_area/0.5) %>% # calculate how many 'quadrats' in each area
+  mutate(quadrat_mulitplier = band_area/0.25) %>% # calculate how many 'quadrats' in each area
   mutate(weight_per_area = mean_wt * quadrat_mulitplier) 
 
-sum(weight_estimate$mean_wt)/1000
+sum(weight_estimate$weight_per_area)/1000
 
 ```
 
@@ -492,15 +530,7 @@ Filtration rate of oysters in cubic meters per hour in Jakolof Bay assuming 975,
 ```{r}
 #| echo: false
 
-pop_classes <- 975545/4
-class_df <- data.frame(age = 1:4, population = pop_classes)
-class_df <- class_df %>%
-  mutate(dry_weight_ind = age * 2.4) %>%
-  mutate(filter_rate_hourly = (0.17 * dry_weight_ind^0.75)/24) %>%
-  mutate(total_filtration = filter_rate_hourly * population)
-
-# total filtration in m^3
-sum(class_df$total_filtration)
+(975545 * 2.68)/1000
 
 ```
 Filtration rate of oysters in cubic meters per hour in Jakolof Bay assuming 1.5 million oysters:
@@ -508,14 +538,6 @@ Filtration rate of oysters in cubic meters per hour in Jakolof Bay assuming 1.5 
 ```{r}
 #| echo: false
 
-pop_classes <- 1500000/4
-class_df <- data.frame(age = 1:4, population = pop_classes)
-class_df <- class_df %>%
-  mutate(dry_weight_ind = age * 2.4) %>%
-  mutate(filter_rate_hourly = (0.17 * dry_weight_ind^0.75)/24) %>%
-  mutate(total_filtration = filter_rate_hourly * population)
-
-# total filtration in m^3
-sum(class_df$total_filtration)
+(1500000 * 2.68)/1000
 
 ```
