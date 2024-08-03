@@ -541,3 +541,34 @@ Filtration rate of oysters in cubic meters per hour in Jakolof Bay assuming 1.5 
 (1500000 * 2.68)/1000
 
 ```
+
+#### Filtration comparison
+
+
+```{r}
+#| echo: false
+#| warning: false
+#| fig-cap: "Estimated total log10 filtration rate for each each of the five mussel zones (defined by quadrat positions) for each polygon (n = 1140)."
+
+oys_filt_rate <- 2.68/1000 # max rate in m^3/ind/hr
+muss_filt_rate <- 28290.25/113897683 # estimated rate in m^3/ind/hr
+tibble(pop = c(1, 975545, 1500000, 113897638, 1, 975545, 1500000, 113897638), 
+       org = c("mussel", "mussel", "mussel", "mussel", "oyster", "oyster", "oyster", "oyster"),
+       rate = c(0.000248383, 242.3088, 372.5745, 28290.24, 0.00268, 2614.461, 4020, 305245.7)) %>%
+ #mutate(pop = log10(pop)) %>%
+ #mutate(rate = log10(rate + 1)) %>%
+ggplot(aes(x = pop, y = rate, color = org)) +
+  geom_point() +
+  coord_trans(x = "log10", y = "log10") +
+  stat_smooth(method = "lm",
+              se = FALSE) +
+  scale_color_viridis(discrete = TRUE,
+                      option = "C",
+                      begin = 0.3,
+                      end = 0.8) +
+  geom_vline(xintercept = c(5.989247, 6.176091,8.056515 )) +
+  theme_bw()
+
+
+
+```
