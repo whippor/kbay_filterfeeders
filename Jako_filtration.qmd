@@ -217,7 +217,7 @@ mussel_data %>%
 ```{r}
 #| echo: false
 #| warning: false
-#| fig-cap: "Figure X: Distribution of weight of mussels in grams across all quadrats within each substrate type."
+#| fig-cap: "Figure 2: Distribution of weight of mussels in grams across all quadrats within each substrate type."
 
 
 # Mean abundance and weight per substrate and quadrat
@@ -234,7 +234,7 @@ mussel_data %>%
 
 ```{r}
 #| echo: false
-#| fig-cap: "Figure X: Mean weight of mussels in each quadrat across two substrate types. Quadrats were arranged from the lower edge of each mussel bed (1) to the upper edge of each bed (5). Colors represent the mean mussel weight in grams across all quadrats within each substrate type."
+#| fig-cap: "Figure 3: Mean weight of mussels in each quadrat across two substrate types. Quadrats were arranged from the lower edge of each mussel bed (1) to the upper edge of each bed (5). Colors represent the mean mussel weight in grams across all quadrats within each substrate type."
 
 
 # Mean abundance and weight per substrate and quadrat
@@ -264,7 +264,7 @@ mussel_data %>%
 
 ```{r}
 #| echo: false
-#| fig-cap: "Estimated clearance rates for all mussels within each substrate type from the low edge (quadrat 1) to the high edge (quadrat 5) for all measured sites."
+#| fig-cap: "Figure 4: Estimated clearance rates for all mussels within each substrate type from the low edge (quadrat 1) to the high edge (quadrat 5) for all measured sites."
 
 
 ggplot(mussel_data, aes(x = quadrat,
@@ -289,7 +289,7 @@ ggplot(mussel_data, aes(x = quadrat,
 
 ```{r}
 #| echo: false
-#| fig-cap: "Substrate polygons in Jakolof Bay."
+#| fig-cap: "Figure 5: Substrate polygons in Jakolof Bay."
 
 
 tidelands_map <- plet(tidelands_jako, "recoded_substrate",
@@ -420,8 +420,7 @@ jako_mussel_area <- jako_areas %>%
                                            substrate == "boulder" ~ corrected_area * BOULDER_cor,
                                            substrate == "mud_organic" ~ corrected_area * PEBBLE_GRANULE_cor,
                                            substrate == "bedrock" ~ corrected_area * BOULDER_cor,
-                                           .default = corrected_area)) %>%
-  mutate(substrate = replace_na(substrate, "unknown")) 
+                                           substrate == "unknown" ~ corrected_area * PEBBLE_GRANULE_cor))
 
 # divide area of each mussel area into 5 equal areas and multiply by each mean 
 # quadrat clearance rate (does not account for unsurveyed habitat types)
@@ -435,7 +434,20 @@ filtration_estimate <- jako_mussel_area %>%
 
 ```
 
-Table 1: Estimated number of mussels across all habitat types
+Table 1: Estimated area of each habitat type available to mussels (m^2^)
+
+```{r}
+#| echo: false
+#| print: false
+#| warning: false
+
+filtration_estimate %>%
+  group_by(substrate) %>%
+  summarise(total_substrate = sum(corrected_mussel_area))
+
+```
+
+Table 2: Estimated number of mussels across all habitat types
 
 ```{r}
 #| echo: false
@@ -499,7 +511,7 @@ sum(weight_estimate$weight_per_area)/1000
 
 ```
 
-Table 2: Total liters filtered per hour per substrate type.
+Table 3: Total liters filtered per hour per substrate type.
 
 ```{r}
 #| echo: false
@@ -513,16 +525,19 @@ filtration_estimate %>%
 ```{r}
 #| echo: false
 #| warning: false
-#| fig-cap: "Estimated total log10 clearance rate for each each of the five mussel zones (defined by quadrat positions) for each polygon (n = 1140)."
+#| fig-cap: "Figure 6: Estimated total clearance rate for each of the five mussel zones defined by tidal positions. Tidal heights are estimated from mean quadrat height within that substrate type for each zone. Lines represent the estimated filtration rate for each polygon (accounting for corrected area, mean mussel density, mean mussel size), for every intertidal habitat polygon in Jakolof Bay. Polygons without representative field sampling had calculated values from derived from either 'boulder' or 'pebble/granule' mussels sizes and densities (see methods)."
 
 
 # plot mean clearance by position
 filtration_estimate %>%
-  ggplot(aes(x = tidal_height_m,
-             y = log10(filtration_per_area),
+  group_by(substrate, tidal_height_m) %>%
+  summarise(filtration_sum = sum(filtration_per_area)) %>%
+    ggplot(aes(x = tidal_height_m,
+             y = filtration_sum,
              color = substrate)) +
-  geom_point(position = position_jitterdodge()) +
-  theme_bw() +
+  geom_smooth(method = "lm",
+              se = FALSE,
+              formula = y~x + I(x^2)) +
   scale_color_viridis("Substrate",
                       labels = c("Bedrock",
                                  "Boulder",
@@ -533,7 +548,9 @@ filtration_estimate %>%
                      option = "A",
                      begin = 0, 
                      end = 0.9) +
-  labs(x = "Tidal height (m)", y = "Log10 clearance rate (L/hr)") 
+  theme_bw() +
+  labs(x = "Tidal height (m)", y = Total~clearance~rate~(L~hr^-1))
+
 
 ```
 
@@ -571,7 +588,7 @@ clearance rate of oysters in cubic meters per hour in Jakolof Bay assuming 1.5 m
 ```{r}
 #| echo: false
 #| warning: false
-#| fig-cap: "Estimated mussel and oyster clearance rates in Jakolof Bay based on population size. A mean clearance rate per individual within a group was calculated and scaled additively to the whole population within each group. Values were pseudo-log transformed to set the origin at zero, and a generalized linear model with link = log was used to create the curves. Horizontal lines represent the total volume and volume exchange of Jakolof Bay, and the estimated clearance rates at specific population sizes used in the analysis for each group."
+#| fig-cap: "Figure 7: Estimated mussel and oyster clearance rates in Jakolof Bay based on population size. A mean clearance rate per individual within a group was calculated and scaled additively to the whole population within each group. Values were pseudo-log transformed to set the origin at zero, and a generalized linear model with link = log was used to create the curves. Horizontal lines represent the total volume and volume exchange of Jakolof Bay, and the estimated clearance rates at specific population sizes used in the analysis for each group."
 
 oys_filt_rate <- 2.68/1000 # max rate in m^3/ind/hr
 muss_filt_rate <- 28290.25/113897683 # estimated rate in m^3/ind/hr
