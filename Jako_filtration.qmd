@@ -297,7 +297,8 @@ tidelands_map <- plet(tidelands_jako, "recoded_substrate",
                       col = c(viridis(n = 5 ,
                                     begin = 0,
                                     end = 0.9,
-                                    option = "A")))
+                                    option = "A")),
+                      weight = 1)
 tidelands_map %>%
   addScaleBar() %>%
   addProviderTiles(providers$OpenTopoMap)
@@ -527,11 +528,27 @@ filtration_estimate %>%
 #| warning: false
 #| fig-cap: "Figure 6: Estimated total clearance rate for each of the five mussel zones defined by tidal positions. Tidal heights are estimated from mean quadrat height within that substrate type for each zone. Lines represent the estimated filtration rate for each polygon (accounting for corrected area, mean mussel density, mean mussel size), for every intertidal habitat polygon in Jakolof Bay. Polygons without representative field sampling had calculated values from derived from either 'boulder' or 'pebble/granule' mussels sizes and densities (see methods)."
 
+# calculate 0 abundance height for mussels (lo and hi)
+hilo <- filtration_estimate %>%
+  group_by(substrate, tidal_height_m) %>%
+  summarise(filtration_sum = sum(filtration_per_area)) %>%
+  summarise(max(tidal_height_m), min(tidal_height_m)) %>%
+  mutate(tidalrange = `max(tidal_height_m)` - `min(tidal_height_m)`) %>%
+  mutate(tenpercent = tidalrange/8) %>%
+  mutate(upperbound = `max(tidal_height_m)` + tenpercent) %>%
+  mutate(lowerbound = `min(tidal_height_m)` - tenpercent) %>%
+  select(substrate, upperbound, lowerbound) %>%
+  pivot_longer(!substrate, names_to = "filtration_sum", 
+               values_to = "tidal_height_m") %>%
+  mutate(filtration_sum = 0) %>%
+  ungroup()
 
 # plot mean clearance by position
 filtration_estimate %>%
   group_by(substrate, tidal_height_m) %>%
   summarise(filtration_sum = sum(filtration_per_area)) %>%
+  ungroup() %>%
+  add_row(hilo) %>%
     ggplot(aes(x = tidal_height_m,
              y = filtration_sum,
              color = substrate)) +
@@ -581,9 +598,13 @@ clearance rate of oysters in cubic meters per hour in Jakolof Bay assuming 1.5 m
 
 (1500000 * 2.68)/1000
 
+# assuming 500,000 oysters per farm, it would take 17.05334 oyster farms to equal the filtration rate of the mussel population: 17.05334 = (22851.48/0.00268)/500000
+
+# same assumptions, it would take 5008.036 oyster farms to equal the tidal flux: 5008.036 = (6710768/0.00268)/500000
+
 ```
 
-#### clearance comparison
+#### Clearance comparison
 
 ```{r}
 #| echo: false
@@ -656,6 +677,51 @@ ggplot(aes(x = pop, y = rate, color = org)) +
            color = viridis(n = 1, begin = 0.8, option = "C"), 
            size = 3) 
 
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+#| fig-cap: "Figure 8: Proportional hourly clearance rates of mussels and oysters compared to the hourly tidal exchange and volume of Jakolof Bay at a +3 m tide."
+#| 
+# size figure of clearance
+tibble(org = c("Jakolof volume", "3 m exchange", "mussel filtration", "oyster filtration"),
+       x = c(10000000, 10000000, 10500000, 11000000),
+       y = c(10000000, 10000000, 10500000, 9500000),
+       rate = c(19237050, 6710768, 28290.24, 4020)) %>%
+ggplot() +
+  geom_point(aes(x = x, 
+                 y = y, 
+                 color = org,
+                 size = rate)) +
+  scale_size(range = c(1,120)) +
+  scale_x_continuous(limits = c(6000000,14000000)) +
+  scale_y_continuous(limits = c(0,20000000)) +
+  scale_color_manual(values = c( "#277F8EFF", "#77D153FF", "#440154FF", "#F1E51DFF")) +
+  theme_void() +
+  guides(size = FALSE) +
+  theme(legend.title=element_blank()) +
+  annotate("text", x = 9400000, y = 11500000, label = "bold(mussel)", color = "white", parse = TRUE) +
+  annotate("text", x = 10500000, y = 7800000, label = "bold(oyster)", color = "white", parse = TRUE) +
+  annotate("text", x = 10000000, y = 17000000, label = "bold(tidal~exchange)", color = "white", parse = TRUE) +
+  geom_segment(aes(x = 9850000, xend = 10300000,
+               y = 11300000, yend = 10700000),
+               color = "white",
+               lwd = 1,
+               arrow = arrow(length = unit(0.1, "inches"))) +
+  geom_segment(aes(x = 10500000, xend = 10900000,
+               y = 8200000, yend = 9200000),
+               color = "white",
+               lwd = 1,
+               arrow = arrow(length = unit(0.1, "inches"))) +
+    geom_segment(aes(x = 10000000, xend = 10000000,
+               y = 16500000, yend = 15300000),
+               color = "white",
+               lwd = 1,
+               arrow = arrow(length = unit(0.1, "inches"))) 
+
+  
 
 ```
 
