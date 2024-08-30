@@ -203,6 +203,10 @@ library(terra)
 # import the shoreline spatial data
 tidelands <- terra::vect("data/tidalbands_shore_information_translated/tidalbands_shore_information_translatedPolygon.shp")
 
+SZ_tidelands <- terra::vect("data/ShoreZone_Jakolof/SZ_Jakolof.shp")
+plot(SZ_tidelands, "ShoreType_")
+sum(SZ_tidelands["Shape_Leng"])
+
 # turn the spatial layer into a data.frame (spreadsheet) and summarize its contents
 tidelands_df <- data.frame(values(tidelands))
 
