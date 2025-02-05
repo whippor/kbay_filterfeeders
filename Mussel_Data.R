@@ -379,7 +379,7 @@ jako_mussel_area <- jako_areas %>%
   mutate(corrected_mussel_area = case_when(substrate == "pebble_granule" ~ corrected_area * PEBBLE_GRANULE_cor,
                                            substrate == "boulder" ~ corrected_area * BOULDER_cor,
                                            .default = corrected_area)) %>%
-  replace_na(substrate, "unknown")
+  mutate(replace_na(substrate, "unknown"))
   
 
 # write data as a csv
@@ -484,6 +484,343 @@ sum(jako_areas$corrected_area)/0.5 * # total area of all corrected Jakolof inter
 #<<<<<<<<<<<<<<<<<<<<<<<<<<END OF SCRIPT>>>>>>>>>>>>>>>>>>>>>>>>#
 
 # SCRATCH PAD ####
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+ 
+mussel_data <- read_csv("data/mussel_data.csv", 
+                        col_types = cols(mussel_ID = col_character(), 
+                                         polygon_ID = col_character(), 
+                                         site = col_character()))
+
+
+# Questions: 
+
+# Are their significant difference in mussel size between substrate types and tidal heights?
+
+
+mussel_data %>%
+  ggplot(aes(y = length_mm, x = tidal_height_ft)) +
+  geom_point() +
+  facet_wrap("substrate") +
+  stat_smooth(method = "lm")
+
+mussel_data %>%
+  group_by(substrate) %>%
+  summarise(max(tidal_height_ft))
+
+# constraining max tidal height to match between substrate types
+mussel_data %>%
+  filter(tidal_height_ft < 14.5) %>%
+  ggplot(aes(y = length_mm, x = tidal_height_ft)) +
+  geom_point() +
+  facet_wrap("substrate") +
+  stat_smooth(method = "lm")
+
+library(lme4)
+
+m0_glm <- glm(length_mm ~ tidal_height_ft + substrate, family = gaussian, data = mussel_data)
+m0_lmer = lmer(length_mm ~ tidal_height_ft + substrate + (1 | site), REML = TRUE, data = mussel_data)
+
+# is including a random effect justified?
+AIC(logLik(m0_glm)) # 28365.18
+AIC(logLik(m0_lmer)) # 27682.4
+
+summary(m0_lmer)
+# YES it is
+
+# POwer analysis - HOw many mussels to measure?
+
+# Load required libraries 
+library(lme4) 
+# For mixed models 
+library(simr) 
+# For power simulations 
+library(MASS)
+# simulating dataset
+
+# Define the nested structure 
+# 3 sites -> 5 levels nested within each site -> varying replicates 
+
+
+
+
+### SITE A
+
+
+# create covariance matrix
+matrix_data <- c(60, -15, -15, 11)
+cv_mat      <- matrix(data = matrix_data, nrow = 2, ncol = 2, byrow = TRUE);
+rownames(cv_mat) <- c("mussel_size", "tidal_height");
+colnames(cv_mat) <- c("mussel_size", "tidal_height");
+
+# determine means
+mns <- c(80, 12)
+
+# simulate data
+sim_data <- mvrnorm(n = 100, mu = mns, Sigma = cv_mat)
+
+substrate <- rep(x = "boulder", times = nrow(sim_data))
+site <- rep(x = "A", times = nrow(sim_data))
+
+siteA_bou <- data.frame(site, substrate, sim_data)
+
+
+# create covariance matrix
+matrix_data <- c(60, -1, -1, 11)
+cv_mat      <- matrix(data = matrix_data, nrow = 2, ncol = 2, byrow = TRUE);
+rownames(cv_mat) <- c("mussel_size", "tidal_height");
+colnames(cv_mat) <- c("mussel_size", "tidal_height");
+
+# determine means
+mns <- c(70, 12)
+
+# simulate data
+sim_data <- mvrnorm(n = 100, mu = mns, Sigma = cv_mat)
+
+substrate <- rep(x = "cobble", times = nrow(sim_data))
+site <- rep(x = "A", times = nrow(sim_data))
+
+siteA_cob <- data.frame(site, substrate, sim_data)
+
+
+### SITE B
+
+
+# create covariance matrix
+matrix_data <- c(68, -12, -12, 11)
+cv_mat      <- matrix(data = matrix_data, nrow = 2, ncol = 2, byrow = TRUE);
+rownames(cv_mat) <- c("mussel_size", "tidal_height");
+colnames(cv_mat) <- c("mussel_size", "tidal_height");
+
+# determine means
+mns <- c(84, 12)
+
+# simulate data
+sim_data <- mvrnorm(n = 100, mu = mns, Sigma = cv_mat)
+
+substrate <- rep(x = "boulder", times = nrow(sim_data))
+site <- rep(x = "B", times = nrow(sim_data))
+
+siteB_bou <- data.frame(site, substrate, sim_data)
+
+
+
+
+# create covariance matrix
+matrix_data <- c(64, -1, -1, 11)
+cv_mat      <- matrix(data = matrix_data, nrow = 2, ncol = 2, byrow = TRUE);
+rownames(cv_mat) <- c("mussel_size", "tidal_height");
+colnames(cv_mat) <- c("mussel_size", "tidal_height");
+
+# determine means
+mns <- c(58, 12)
+
+# simulate data
+sim_data <- mvrnorm(n = 100, mu = mns, Sigma = cv_mat)
+
+substrate <- rep(x = "cobble", times = nrow(sim_data))
+site <- rep(x = "B", times = nrow(sim_data))
+
+siteB_cob <- data.frame(site, substrate, sim_data)
+
+
+
+### SITE C
+
+# create covariance matrix
+matrix_data <- c(74, -12, -12, 11)
+cv_mat      <- matrix(data = matrix_data, nrow = 2, ncol = 2, byrow = TRUE);
+rownames(cv_mat) <- c("mussel_size", "tidal_height");
+colnames(cv_mat) <- c("mussel_size", "tidal_height");
+
+# determine means
+mns <- c(81, 12)
+
+# simulate data
+sim_data <- mvrnorm(n = 100, mu = mns, Sigma = cv_mat)
+
+substrate <- rep(x = "boulder", times = nrow(sim_data))
+site <- rep(x = "C", times = nrow(sim_data))
+
+siteC_bol <- data.frame(site, substrate, sim_data)
+
+
+# create covariance matrix
+matrix_data <- c(80, 2, 2, 11)
+cv_mat      <- matrix(data = matrix_data, nrow = 2, ncol = 2, byrow = TRUE);
+rownames(cv_mat) <- c("mussel_size", "tidal_height");
+colnames(cv_mat) <- c("mussel_size", "tidal_height");
+
+# determine means
+mns <- c(67, 12)
+
+# simulate data
+sim_data <- mvrnorm(n = 100, mu = mns, Sigma = cv_mat)
+
+substrate <- rep(x = "cobble", times = nrow(sim_data))
+site <- rep(x = "C", times = nrow(sim_data))
+
+siteC_cob <- data.frame(site, substrate, sim_data)
+
+
+### SITE D
+
+# create covariance matrix
+matrix_data <- c(77, -14, -14, 11)
+cv_mat      <- matrix(data = matrix_data, nrow = 2, ncol = 2, byrow = TRUE);
+rownames(cv_mat) <- c("mussel_size", "tidal_height");
+colnames(cv_mat) <- c("mussel_size", "tidal_height");
+
+# determine means
+mns <- c(88, 12)
+
+# simulate data
+sim_data <- mvrnorm(n = 100, mu = mns, Sigma = cv_mat)
+
+substrate <- rep(x = "boulder", times = nrow(sim_data))
+site <- rep(x = "D", times = nrow(sim_data))
+
+siteD_bol <- data.frame(site, substrate, sim_data)
+
+
+# create covariance matrix
+matrix_data <- c(79, -1.5, -1.5, 11)
+cv_mat      <- matrix(data = matrix_data, nrow = 2, ncol = 2, byrow = TRUE);
+rownames(cv_mat) <- c("mussel_size", "tidal_height");
+colnames(cv_mat) <- c("mussel_size", "tidal_height");
+
+# determine means
+mns <- c(75, 12)
+
+# simulate data
+sim_data <- mvrnorm(n = 100, mu = mns, Sigma = cv_mat)
+
+substrate <- rep(x = "cobble", times = nrow(sim_data))
+site <- rep(x = "D", times = nrow(sim_data))
+
+siteD_cob <- data.frame(site, substrate, sim_data)
+
+
+
+### SITE E
+
+# create covariance matrix
+matrix_data <- c(81, -17, -17, 11)
+cv_mat      <- matrix(data = matrix_data, nrow = 2, ncol = 2, byrow = TRUE);
+rownames(cv_mat) <- c("mussel_size", "tidal_height");
+colnames(cv_mat) <- c("mussel_size", "tidal_height");
+
+# determine means
+mns <- c(72, 12)
+
+# simulate data
+sim_data <- mvrnorm(n = 100, mu = mns, Sigma = cv_mat)
+
+substrate <- rep(x = "boulder", times = nrow(sim_data))
+site <- rep(x = "E", times = nrow(sim_data))
+
+siteE_bol <- data.frame(site, substrate, sim_data)
+
+
+# create covariance matrix
+matrix_data <- c(58, 0, 0, 11)
+cv_mat      <- matrix(data = matrix_data, nrow = 2, ncol = 2, byrow = TRUE);
+rownames(cv_mat) <- c("mussel_size", "tidal_height");
+colnames(cv_mat) <- c("mussel_size", "tidal_height");
+
+# determine means
+mns <- c(59, 12)
+
+# simulate data
+sim_data <- mvrnorm(n = 100, mu = mns, Sigma = cv_mat)
+
+substrate <- rep(x = "cobble", times = nrow(sim_data))
+site <- rep(x = "E", times = nrow(sim_data))
+
+siteE_cob <- data.frame(site, substrate, sim_data)
+
+
+### SITE F
+
+# create covariance matrix
+matrix_data <- c(81, -10, -10, 11)
+cv_mat      <- matrix(data = matrix_data, nrow = 2, ncol = 2, byrow = TRUE);
+rownames(cv_mat) <- c("mussel_size", "tidal_height");
+colnames(cv_mat) <- c("mussel_size", "tidal_height");
+
+# determine means
+mns <- c(77, 12)
+
+# simulate data
+sim_data <- mvrnorm(n = 100, mu = mns, Sigma = cv_mat)
+
+substrate <- rep(x = "boulder", times = nrow(sim_data))
+site <- rep(x = "F", times = nrow(sim_data))
+
+siteF_bol <- data.frame(site, substrate, sim_data)
+
+
+# create covariance matrix
+matrix_data <- c(54, 1, 1, 11)
+cv_mat      <- matrix(data = matrix_data, nrow = 2, ncol = 2, byrow = TRUE);
+rownames(cv_mat) <- c("mussel_size", "tidal_height");
+colnames(cv_mat) <- c("mussel_size", "tidal_height");
+
+# determine means
+mns <- c(60, 12)
+
+# simulate data
+sim_data <- mvrnorm(n = 100, mu = mns, Sigma = cv_mat)
+
+substrate <- rep(x = "cobble", times = nrow(sim_data))
+site <- rep(x = "F", times = nrow(sim_data))
+
+siteF_cob <- data.frame(site, substrate, sim_data)
+
+
+
+
+
+
+
+### FULL DATA
+
+dat <- rbind(siteA_bou, siteA_cob,
+             siteB_bou, siteB_cob,
+             siteC_bol, siteC_cob,
+             siteD_bol, siteD_cob,
+             siteE_bol, siteE_cob,
+             siteF_bol, siteF_cob)
+dat <- data.frame(dat)
+
+
+
+# Fit a mixed-effects model 
+model <- glmer(mussel_size ~ site + substrate + (1|tidal_height),
+               data = dat, family = "poisson") 
+
+model <- lmer(mussel_size ~ tidal_height + (1|site), data = dat)
+summary(model)
+
+modelmodmodel.frame()el
+# Power analysis using simr 
+# Increase replicates until power reaches 0.8 
+power_curve <- powerSim(model, 
+                        fixed("Intercept", 
+                              method = "z"), 
+                        nsim = 100, 
+                        alpha = 0.01) 
+power_curve 
+# Alternatively, test with increasing sample sizes 
+new_data <- extend(model, along = "replicate", n = 10) 
+# Test up to 10 replicates 
+power_test <- powerSim(model, nsim = 100) 
+plot(power_test)
+
+
+muss_lm <- 
+summary(muss_lm)
+
 
 # test of git connection
 
